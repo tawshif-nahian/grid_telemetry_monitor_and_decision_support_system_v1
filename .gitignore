@@ -1,0 +1,13 @@
+@"
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+simulator/__pycache__/
+simulator/*.pyc
+simulator/venv/
+simulator/.venv/
+simulator/.env
+.DS_Store
+Thumbs.db
+"@ | Out-File -FilePath .gitignore -Encoding utf8

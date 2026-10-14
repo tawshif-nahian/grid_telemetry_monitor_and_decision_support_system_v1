@@ -1,54 +1,92 @@
-GridDecision AI • National Power Telemetry & Supervisory Monitor
+⚡ GridDecision AI
 
-Repository Overview:
+Next-Gen Supervisory Telemetry & AI-Assisted Grid Dispatch Platform
 
-A real-time supervisory telemetry and AI-assisted decision-support platform for national power generation monitoring. Features horizontal PostgreSQL time-series partitioning (Supabase), sub-second WebSocket CDC streaming, and a two-page React dashboard tracking 8 dynamic grid metrics across thermal, CCGT, and solar assets. Developed entirely in a local sandboxed environment and published as a consolidated initial release.
+[!IMPORTANT]
+Repository Release Notice:
 
-About The Project
+This platform was architected, integrated, and verified end-to-end within an isolated local sandboxed environment. The entire verified codebase—comprising the physics telemetry generator, partitioned PostgreSQL schema, and real-time reactive dashboard—was subsequently committed and published to version control as a single consolidated initial release.
 
-GridDecision AI bridges high-frequency industrial power telemetry with real-time web visualization and heuristic decision support. The platform models real-time operational dynamics across base-load thermal, flexible combined-cycle, and renewable generation facilities benchmarked on national grid infrastructure (specifically the Payra 1320 MW Coal Plant, Titas 450 MW CCGT, and Sirajganj 68 MW Solar Park).
+📌 Table of Contents
 
-The platform continuously evaluates 8 mission-critical operational parameters per facility, calculates live synchronous frequency deviation (Delta-f) against statutory 50.00 Hz standards, and runs an automated decision engine delivering load-balancing, spinning reserve, and thermal-stress mitigation advisories.
-
-Development Note: This platform was architected, integrated, and verified end-to-end within an isolated local development environment before being committed and published to version control as a single consolidated initial release.
+Overview & Research Motivation
 
 System Architecture
 
-The application decouples generation, ingestion, replication, and visualization across three distinct layers:
-
-[ Python Physics Simulator (generator.py) ]
-          │
-          │ (Calculates 8 physical telemetry parameters every 5s)
-          ▼ (HTTPS REST / PostgREST)
-[ Supabase Managed PostgreSQL Database ]
-   ├── powerplants (Asset Registry & Operational Metadata)
-   ├── telemetry_payra (Partitioned Time-Series Store)
-   ├── telemetry_titas (Partitioned Time-Series Store)
-   └── telemetry_sirajganj (Partitioned Time-Series Store)
-          │
-          │ (Change Data Capture / Logical Replication from WAL)
-          ▼
-[ Supabase Realtime Engine (WebSockets) ]
-          │
-          │ (Sub-150ms JSON frame push on committed INSERT)
-          ▼
-[ React 18 + Tailwind CSS Supervisory Dashboard ]
-   ├── Home View: Fleet aggregation, clean energy share, macro frequency
-   └── Unit Console: 8-parameter telemetry dials, dynamic AI advisories,
-                     live rolling Recharts trajectory, and one-click CSV export
-
-
 Monitored Generation Fleet
 
-Facility Name
+The 8 Sensor Telemetry Parameters
 
-Unit Code
+Core Engineering Features
+
+Database Architecture & Partitioning
+
+Repository Structure
+
+Getting Started & Installation
+
+Tech Stack
+
+License
+
+🌐 Overview & Research Motivation
+
+GridDecision AI bridges high-frequency industrial power telemetry with real-time web visualization and heuristic decision support. Modern national dispatchers often rely on asynchronous tabular reports or delayed SCADA overviews. GridDecision AI replaces static monitoring with an active, automated supervisory interface:
+
+Sub-150ms Ingestion: Tracks high-capacity thermal, flexible combined cycle, and renewable solar generation across Bangladesh's interconnected grid nodes.
+
+Synchronous Equilibrium: Calculates live frequency deviation ($\Delta f$) against the nominal 50.00 Hz baseline ($N_s = 120f / P$).
+
+Intelligent Dispatch Support: Runs a real-time rule engine that issues actionable setpoints for spinning reserve ramps, thermal stress mitigation, and economic clean energy merit-order prioritization.
+
+🏗️ System Architecture
+
+The pipeline is completely decoupled into three scalable layers:
+
+┌────────────────────────────────────────────────────────┐
+│      1. Data Generation: generator.py (Python 3)       │
+│  Physics simulation engine generating 8 sensor metrics │
+│        every 5 seconds under thermodynamic limits       │
+└──────────────────────────┬─────────────────────────────┘
+                           │ HTTPS POST (REST / PostgREST)
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│     2. Cloud Relational Ingestion: Supabase (Postgres)  │
+│  - powerplants (Metadata Registry)                     │
+│  - telemetry_payra (Time-Series Partition)             │
+│  - telemetry_titas (Time-Series Partition)             │
+│  - telemetry_sirajganj (Time-Series Partition)         │
+└──────────────────────────┬─────────────────────────────┘
+                           │ Logical Decoding / WAL Change Data Capture
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│      3. Real-Time Streaming: Supabase Realtime Engine  │
+│  Elixir daemon broadcasting JSON payload over WebSocket│
+└──────────────────────────┬─────────────────────────────┘
+                           │ Sub-150ms WebSocket Frame Push
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│     4. Reactive Web Application: React 18 + Tailwind    │
+│  - Home View: Macro aggregation, clean energy share    │
+│  - Dashboard: 8 live dials, SVG chart, AI engine, CSV  │
+└────────────────────────────────────────────────────────┘
+
+
+🏭 Monitored Generation Fleet
+
+The prototype models three benchmark power stations representing distinct dispatch roles:
+
+Asset Name
+
+Code
 
 Rated Capacity
 
-Technology / Primary Fuel
+Fuel & Technology
 
-Dedicated Partition Table
+Grid Role
+
+Dedicated Table
 
 Payra Thermal Power Plant
 
@@ -58,15 +96,19 @@ PYR-COAL
 
 Ultra-Supercritical Coal
 
+BASELOAD
+
 telemetry_payra
 
-Titas Combined Cycle Plant
+Titas Combined Cycle Station
 
 TIT-GAS
 
 450 MW
 
-Combined Cycle Gas Turbine (CCGT)
+Combined Cycle Gas (CCGT)
+
+LOAD-FOLLOWING
 
 telemetry_titas
 
@@ -76,134 +118,86 @@ SRJ-SOLAR
 
 68 MW
 
-Photovoltaic (PV) Solar Array
+High-Efficiency Photovoltaic (PV)
+
+ZERO-MARGINAL-COST
 
 telemetry_sirajganj
 
-Monitored Telemetry Parameters (The 8 Sensor Metrics)
+📊 The 8 Sensor Telemetry Parameters
 
-Each unit telemetry record captures 8 operational variables every 5 seconds:
+Each generation unit commits 8 physical parameters every 5 seconds:
 
-Active Power Output (MW): Real power delivered to the national transmission grid.
+├── 1. Active Power Output (MW)     ── Real active electrical power exported to transmission lines
+├── 2. Substation Bus Voltage (kV)  ── Switchyard potential (400 kV / 230 kV / 132 kV) via AVR
+├── 3. Grid Frequency (Hz)          ── Rotor synchronous speed (Nominal target: 50.00 Hz)
+├── 4. Core Operating Temp (°C)     ── Boiler main steam / gas turbine exhaust / PV cell temp
+├── 5. Fuel Consumption Rate (U/h)  ── Coal metric tons/h, Gas k-m³/h, or 0.00 for solar
+├── 6. Thermal Efficiency (%)       ── Thermodynamic first-law conversion efficiency
+├── 7. Grid Dispatch Load (%)       ── (Current Generation MW / Installed Capacity MW) * 100
+└── 8. Carbon Intensity (kg/MWh)    ── Direct carbon emissions generated per Megawatt-hour
 
-Substation Bus Voltage (kV): High-voltage switchyard potential (400 kV at Payra, 230 kV at Titas, 132 kV at Sirajganj) regulated via excitation systems and Automatic Voltage Regulators (AVR).
 
-Grid Frequency (Hz): Real-time rotational frequency of the synchronous grid, measuring national supply-demand equilibrium against the 50.00 Hz baseline ($N_s = 120f / P$).
-
-Operating / Exhaust Temperature (°C): Main steam temperature for coal boilers (540.0°C baseline), turbine exhaust gas temperature for CCGT (480.0°C baseline), or inverter/PV cell temperature for solar (42.0°C baseline).
-
-Fuel Consumption Rate (Units/h): Volumetric/mass consumption rate (metric tons/h for coal, thousand m³/h for gas, 0.00 for solar).
-
-Thermal Efficiency (%): First-law thermodynamic conversion efficiency and heat-rate tracking.
-
-Grid Dispatch Load (%): Percentage of total nameplate capacity actively scheduled and dispatched by the National Load Despatch Centre (NLDC).
-
-Carbon Intensity (kg CO2/MWh): Specific environmental emissions factor per generated energy unit.
-
-Core Capabilities & Engineering Features
+🚀 Core Engineering Features
 
 1. Dual-View Supervisory Interface
 
-Fleet Overview (Home): Aggregates real-time generation across all active partitions, monitors gross fleet utilization against 1838 MW total installed capacity, and calculates the Clean Energy Penetration Share (%) in real time:
+Fleet Overview (Home View): Aggregates gross active generation across all facilities against total fleet capacity (1838 MW), tracks macro grid frequency compliance, and computes the real-time Clean Energy Penetration Share (%):
 
 
 $$\text{Clean Energy Share} = \left(\frac{\text{Sirajganj Solar Generation}}{\text{Total Grid Generation}}\right) \times 100$$
 
-Asset-Level SCADA Console (Dashboard): Detailed telemetry inspection with plant-switching controls, physical sensor readouts, health status indicators (OPTIMAL vs. WARNING), and rolling time-series trends.
+Asset-Level SCADA Console (Dashboard View): Deep inspection console with rapid plant toggling, high-contrast parameter cards, live status badges (OPTIMAL vs. WARNING), and rolling time-series trends.
 
-2. Live Synchronous Frequency Deviation ($\Delta f$) Tracking
+2. Synchronous Frequency Deviation ($\Delta f$) Tracking
 
-Calculates immediate frequency offset from the nominal 50.00 Hz grid code:
+Calculates the exact deviation from the nominal 50.00 Hz synchronous baseline:
 
 
 $$\Delta f = f_{\text{actual}} - 50.00\text{ Hz}$$
 
+$\Delta f < -0.08\text{ Hz}$: Indicates load dragging generators down; triggers visual amber warnings.
 
-A negative deviation indicates a generation deficit causing kinetic rotor deceleration; a positive deviation indicates a supply surplus accelerating turbine shafts. Deviations exceeding $\pm 0.08\text{ Hz}$ automatically update status indicators and trigger advisory flags.
+$\Delta f \ge 0.00\text{ Hz}$: Indicates sufficient system kinetic inertia and power generation headroom.
 
 3. AI-Assisted Decision-Support Engine
 
-An integrated heuristic expert-system rule engine evaluates incoming multi-variable payloads in real time:
+An expert-system rule engine evaluates multivariate parameters in real time to provide prescriptive operational advice:
 
-Renewable Merit-Order Priority: Prioritizes zero-marginal-cost solar dispatch, recommending curtailment prevention and thermal throttle-backs during generation peaks.
+☀️ Renewable Merit-Order Priority: Detects active solar generation and advises zero-fuel-cost transmission priority over fossil thermal assets.
 
-Primary Frequency Response: Detects sub-nominal grid frequency dips ($\Delta f \le -0.08\text{ Hz}$) and advises instantaneous $+15\text{ MW}$ spinning reserve ramp setpoints from flexible gas assets.
+⚡ Primary Frequency Response: Automatically advises a $+15\text{ MW}$ spinning reserve fast-ramp whenever frequency drops below 49.92 Hz.
 
-Thermal Stress Mitigation: Identifies boiler over-temperature conditions ($> 544.5^\circ\text{C}$) to flag tube fouling risks and recommend auxiliary soot-blowing cycles.
+🔥 Thermal Strain Mitigation: Warns operators when Payra's steam temperature exceeds $544.5^\circ\text{C}$ ($+4.5^\circ\text{C}$ over baseline) to prevent boiler tube fouling.
 
-Confidence & Action Scoring: Assigns deterministic confidence percentages and recommended dispatch setpoints for grid operators.
+🎯 Confidence Scoring: Displays confidence ratings (e.g., 94.8% Confidence) alongside clear action directives.
 
-4. One-Click Research Dataset Exporter (.CSV)
+4. Researcher Telemetry Exporter (.CSV)
 
-A built-in data pipeline allows researchers to extract the latest 60 historical telemetry rows from PostgreSQL directly into client-side memory (Blob serialization) and download a timestamped .csv file for offline analysis in Python, MATLAB, or PyTorch.
+[!TIP]
+Click the Export Telemetry (.CSV) button in the dashboard to query the last 60 database snapshots and trigger a direct browser download of structured .csv time-series data for offline machine learning analysis in Python, MATLAB, or PyTorch.
 
 5. Memory-Safe Rolling Visualizer
 
-The Recharts time-series engine enforces an in-memory sliding window buffer (slice(-14)) for incoming WebSocket data, maintaining constant $O(1)$ memory consumption and preventing DOM degradation during long-running supervisory sessions.
+The Recharts line chart uses an in-memory sliding window buffer (slice(-14)) for incoming WebSocket data, maintaining constant $O(1)$ memory consumption and preventing DOM memory leaks during multi-hour runtime sessions.
 
-Database Architecture & Design
+🗄️ Database Architecture & Partitioning
 
-Master Plant Registry (powerplants)
+The database runs on cloud PostgreSQL hosted on Supabase, structured into metadata and partitioned time-series tables:
 
-Column
+Master Registry Schema (powerplants)
 
-Type
+CREATE TABLE powerplants (
+    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    name TEXT NOT NULL,
+    plant_code VARCHAR(10) UNIQUE NOT NULL,
+    capacity_mw NUMERIC NOT NULL,
+    fuel_type VARCHAR(50) NOT NULL,
+    table_name VARCHAR(50) NOT NULL
+);
 
-Constraints
 
-Description
-
-id
-
-BIGINT
-
-Primary Key
-
-Unique asset identifier
-
-name
-
-TEXT
-
-NOT NULL
-
-Official station name
-
-plant_code
-
-VARCHAR(10)
-
-UNIQUE, NOT NULL
-
-Industry asset code (PYR-COAL, etc.)
-
-capacity_mw
-
-NUMERIC
-
-NOT NULL
-
-Maximum rated capacity
-
-fuel_type
-
-VARCHAR(50)
-
-NOT NULL
-
-Fuel and thermodynamic cycle classification
-
-table_name
-
-VARCHAR(50)
-
-NOT NULL
-
-Target time-series partition table
-
-Time-Series Partition Schema
-
-Each plant writes directly into its dedicated time-series partition table:
+Time-Series Partition Schema (telemetry_payra, telemetry_titas, telemetry_sirajganj)
 
 CREATE TABLE telemetry_payra (
     id BIGSERIAL PRIMARY KEY,
@@ -219,99 +213,135 @@ CREATE TABLE telemetry_payra (
     status VARCHAR(20)
 );
 
+CREATE INDEX idx_payra_timestamp ON telemetry_payra (timestamp DESC);
 
-Why Separate Tables Instead of a Monolith?
 
-Write-Lock Isolation: Continuous 5-second ingestion across multiple generators creates write contention on shared B-Tree indexes. Partitioning by asset isolates index modifications.
+[!NOTE]
+Why Partition Tables by Asset?
 
-Query Optimization: Time-series range queries (ORDER BY timestamp DESC LIMIT 14) execute via targeted partition scans without scanning unindexed rows from other facilities.
+In continuous SCADA systems, writing multiple plant streams into a single unpartitioned table causes write-lock contention and index bloat. Isolating each facility into its own table guarantees sub-millisecond query execution (ORDER BY timestamp DESC LIMIT 14) and clean WebSocket channel filtering.
 
-WebSocket Channel Scoping: Allows frontend clients to subscribe exclusively to updates from a specific station without filtering out unwanted global telemetry messages.
-
-Repository Structure
+📁 Repository Structure
 
 grid_telemetry/
-├── frontend/
-│   ├── public/
-│   ├── src/
-│   │   ├── App.jsx              # Main SPA router, UI views & AI logic
-│   │   ├── supabaseClient.js    # Supabase credentials & initialization
-│   │   ├── index.css            # Tailwind CSS directives & layout
-│   │   └── main.jsx             # React DOM entry point
-│   ├── package.json             # Frontend dependencies & scripts
-│   ├── tailwind.config.js       # Tailwind style configuration
-│   └── vite.config.js           # Vite development server configuration
-├── simulator/
-│   ├── generator.py             # Physics-grounded multi-plant telemetry generator
-│   └── requirements.txt         # Python runtime dependencies
-├── .gitignore                   # Root exclusion configuration (node_modules, venvs)
-└── README.md                    # Technical documentation
+│
+├── 📂 frontend/                     # React 18 SPA Client
+│   ├── 📂 public/                   # Static assets & favicons
+│   ├── 📂 src/
+│   │   ├── 📄 App.jsx               # Main SPA router, dashboard views & AI logic
+│   │   ├── 📄 supabaseClient.js     # Supabase initialization client
+│   │   ├── 📄 index.css             # Tailwind CSS custom styles & font imports
+│   │   └── 📄 main.jsx              # React DOM mounting entry point
+│   ├── 📄 package.json              # NPM dependencies & scripts
+│   ├── 📄 tailwind.config.js        # Tailwind CSS utility configuration
+│   └── 📄 vite.config.js            # Vite bundler build settings
+│
+├── 📂 simulator/                    # Python Telemetry Engine
+│   ├── 📄 generator.py              # Physics-grounded 5-second multi-plant simulator
+│   └── 📄 requirements.txt          # Python dependencies (supabase, httpx)
+│
+├── 📄 .gitignore                    # Root exclusion file (node_modules, venvs, dist)
+└── 📄 README.md                     # Comprehensive project documentation
 
 
-Installation & Setup
+⚙️ Getting Started & Installation
 
 Prerequisites
 
-Node.js (v18.0.0 or higher)
+Node.js: v18.0.0 or higher
 
-Python (v3.9 or higher)
+Python: v3.9 or higher
 
-Supabase project with an active PostgreSQL instance and Realtime replication enabled on telemetry tables.
+Supabase Account: Free-tier PostgreSQL database instance
 
-1. Database Setup
+1. Database Provisioning
 
-Execute the following setup inside your Supabase SQL Editor:
+Open the SQL Editor inside your Supabase project dashboard and execute:
 
-Create the powerplants metadata table and populate it with Payra, Titas, and Sirajganj records.
+Create and populate the powerplants registry.
 
-Create the three dedicated telemetry tables: telemetry_payra, telemetry_titas, and telemetry_sirajganj.
+Create the three partitioned tables (telemetry_payra, telemetry_titas, telemetry_sirajganj).
 
-Enable replication for each telemetry table under Database -> Replication in the Supabase Dashboard.
+Enable replication for all three telemetry tables under Database -> Replication to activate Change Data Capture (CDC).
 
-2. Frontend Configuration
+2. Frontend Setup
 
-Navigate to the frontend directory and install the required dependencies:
+Navigate to the frontend/ directory, install packages, and start the development server:
 
 cd frontend
 npm install
-
-
-Configure your Supabase credentials in frontend/src/supabaseClient.js:
-
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = 'YOUR_SUPABASE_PROJECT_URL';
-const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-
-Start the local development server:
-
 npm run dev
 
 
-The web dashboard will be accessible at http://localhost:5173/.
+The interface will be live at http://localhost:5173/.
 
-3. Simulator Execution
+3. Telemetry Simulator Execution
 
-Open a separate terminal window and start the Python telemetry simulator:
+In a separate terminal, initialize the Python simulation engine:
 
 cd simulator
 pip install -r requirements.txt
 python generator.py
 
 
-The simulator will begin streaming realistic 8-parameter snapshots to PostgreSQL every 5 seconds, immediately triggering real-time UI updates via WebSockets.
+The simulator will immediately begin computing 8-parameter snapshots and pushing them to PostgreSQL every 5 seconds, triggering live real-time WebSocket updates across the dashboard.
 
-Tech Stack
+🛠️ Tech Stack
 
-Frontend: React 18, Vite, Tailwind CSS, Recharts (SVG Time-Series Visualization), Lucide React (Icons)
+Domain
 
-Backend & Database: Supabase, PostgreSQL 15, PostgREST, Supabase Realtime Engine (Elixir-based WAL Change Data Capture)
+Technology
 
-Simulator: Python 3, supabase-py, httpx
+Purpose
 
-License
+Frontend Framework
 
-This project is developed for academic research, grid engineering evaluation, and prototype decision-support analysis. Distributed under the MIT License.
+React 18
+
+Single Page Application (SPA) architecture
+
+Build Tooling
+
+Vite
+
+Instant Hot Module Replacement (HMR) & bundling
+
+Styling & UI
+
+Tailwind CSS
+
+Industrial high-contrast dark-mode styling
+
+Data Visualization
+
+Recharts
+
+Hardware-accelerated SVG time-series line charts
+
+Iconography
+
+Lucide React
+
+Clean operational SCADA icons
+
+Cloud Database
+
+PostgreSQL 15 (Supabase)
+
+Relational metadata & time-series partitions
+
+Streaming / CDC
+
+Supabase Realtime (Elixir)
+
+Sub-150ms WebSocket push notifications via WAL
+
+Physics Simulation
+
+Python 3 + supabase-py
+
+Physics-constrained telemetry generator
+
+📄 License
+
+This project is open-source and distributed under the MIT License. Engineered for academic evaluation, grid research, and prototype decision-support analysis.

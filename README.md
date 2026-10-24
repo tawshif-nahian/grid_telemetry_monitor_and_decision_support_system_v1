@@ -33,7 +33,35 @@
 <h2>🏗️ System Architecture</h2>
 <p>The platform decouples telemetry generation, relational storage, logical replication, and reactive visualization across four tiers:</p>
 
-<pre><code>┌────────────────────────────────────────────────────────┐<br/>│      1. Data Generation: generator.py (Python 3)       │<br/>│  Physics simulation engine generating 8 sensor metrics │<br/>│        every 5 seconds under thermodynamic limits      │<br/>└──────────────────────────┬─────────────────────────────┘<br/>                           │ HTTPS POST (REST / PostgREST)<br/>                           ▼<br/>┌────────────────────────────────────────────────────────┐<br/>│     2. Cloud Relational Ingestion: Supabase (Postgres) │<br/>│  • powerplants (Asset Metadata Registry)               │<br/>│  • telemetry_payra (Time-Series Partition)             │<br/>│  • telemetry_titas (Time-Series Partition)             │<br/>│  • telemetry_sirajganj (Time-Series Partition)         │<br/>└──────────────────────────┬─────────────────────────────┘<br/>                           │ Logical Decoding / WAL Change Data Capture<br/>                           ▼<br/>┌────────────────────────────────────────────────────────┐<br/>│      3. Real-Time Streaming: Supabase Realtime Engine  │<br/>│  Elixir daemon broadcasting JSON frames via WebSockets │<br/>└──────────────────────────┬─────────────────────────────┘<br/>                           │ Sub-150ms WebSocket Frame Push<br/>                           ▼<br/>┌────────────────────────────────────────────────────────┐<br/>│     4. Reactive Web Application: React 18 + Tailwind   │<br/>│  • Home View: Macro aggregation &amp; clean energy share     • Dashboard: 8 live dials, SVG chart, AI engine, CSV  │<br/>└────────────────────────────────────────────────────────┘</code></pre>
+<pre>
+┌────────────────────────────────────────────────────────┐
+│      1. Data Generation: generator.py (Python 3)       │
+│  Physics simulation engine generating 8 sensor metrics │
+│        every 5 seconds under thermodynamic limits      │
+└──────────────────────────┬─────────────────────────────┘
+                           │ HTTPS POST (REST / PostgREST)
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│     2. Cloud Relational Ingestion: Supabase (Postgres) │
+│  • powerplants (Asset Metadata Registry)               │
+│  • telemetry_payra (Time-Series Partition)             │
+│  • telemetry_titas (Time-Series Partition)             │
+│  • telemetry_sirajganj (Time-Series Partition)         │
+└──────────────────────────┬─────────────────────────────┘
+                           │ Logical Decoding / WAL Change Data Capture
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│      3. Real-Time Streaming: Supabase Realtime Engine  │
+│  Elixir daemon broadcasting JSON frames via WebSockets │
+└──────────────────────────┬─────────────────────────────┘
+                           │ Sub-150ms WebSocket Frame Push
+                           ▼
+┌────────────────────────────────────────────────────────┐
+│     4. Reactive Web Application: React 18 + Tailwind   │
+│  • Home View: Macro aggregation &amp; clean energy share   │
+│  • Dashboard: 8 live dials, SVG chart, AI engine, CSV  │
+└────────────────────────────────────────────────────────┘
+</pre>
 
 <hr/>
 
@@ -191,10 +219,35 @@
 <p>The backend runs on managed PostgreSQL 15 hosted on Supabase, separating static asset metadata from high-frequency time-series tables:</p>
 
 <h3>Master Registry Schema (<code>powerplants</code>)</h3>
-<pre><code>CREATE TABLE powerplants (<br/>    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,<br/>    name TEXT NOT NULL,<br/>    plant_code VARCHAR(10) UNIQUE NOT NULL,<br/>    capacity_mw NUMERIC NOT NULL,<br/>    fuel_type VARCHAR(50) NOT NULL,<br/>    table_name VARCHAR(50) NOT NULL<br/>);</code></pre>
+<pre>
+CREATE TABLE powerplants (
+    id BIGINT PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    name TEXT NOT NULL,
+    plant_code VARCHAR(10) UNIQUE NOT NULL,
+    capacity_mw NUMERIC NOT NULL,
+    fuel_type VARCHAR(50) NOT NULL,
+    table_name VARCHAR(50) NOT NULL
+);
+</pre>
 
 <h3>Time-Series Partition Schema (<code>telemetry_payra</code>, <code>telemetry_titas</code>, <code>telemetry_sirajganj</code>)</h3>
-<pre><code>CREATE TABLE telemetry_payra (<br/>    id BIGSERIAL PRIMARY KEY,<br/>    timestamp TIMESTAMPTZ DEFAULT NOW(),<br/>    power_output_mw NUMERIC(6,2),<br/>    voltage_kv NUMERIC(5,2),<br/>    frequency_hz NUMERIC(4,2),<br/>    temperature_c NUMERIC(5,2),<br/>    fuel_consumption_rate NUMERIC(7,2),<br/>    efficiency_pct NUMERIC(4,2),<br/>    grid_load_pct NUMERIC(4,2),<br/>    carbon_intensity_kg NUMERIC(6,2),<br/>    status VARCHAR(20)<br/>);<br/><br/>CREATE INDEX idx_payra_timestamp ON telemetry_payra (timestamp DESC);</code></pre>
+<pre>
+CREATE TABLE telemetry_payra (
+    id BIGSERIAL PRIMARY KEY,
+    timestamp TIMESTAMPTZ DEFAULT NOW(),
+    power_output_mw NUMERIC(6,2),
+    voltage_kv NUMERIC(5,2),
+    frequency_hz NUMERIC(4,2),
+    temperature_c NUMERIC(5,2),
+    fuel_consumption_rate NUMERIC(7,2),
+    efficiency_pct NUMERIC(4,2),
+    grid_load_pct NUMERIC(4,2),
+    carbon_intensity_kg NUMERIC(6,2),
+    status VARCHAR(20)
+);
+
+CREATE INDEX idx_payra_timestamp ON telemetry_payra (timestamp DESC);
+</pre>
 
 <blockquote>
   <b>💡 Why Partition Tables by Generation Asset?</b><br/>
@@ -204,7 +257,25 @@
 <hr/>
 
 <h2>📁 Repository Structure</h2>
-<pre><code>grid_telemetry/<br/>├── frontend/                        # React 18 Single Page Application<br/>│   ├── public/                      # Static assets<br/>│   ├── src/<br/>│   │   ├── App.jsx                  # Main router, SCADA views, AI engine &amp; CSV exporter<br/>│   │   ├── supabaseClient.js        # Supabase client &amp; WebSocket configuration<br/>│   │   ├── index.css                # Tailwind CSS directives &amp; dark theme<br/>│   │   └── main.jsx                 # React DOM entry point<br/>│   ├── package.json                 # Frontend dependencies &amp; scripts<br/>│   └── vite.config.js               # Vite bundler configuration<br/>│<br/>├── simulator/                       # Python Physics Telemetry Engine<br/>│   ├── generator.py                 # 5-second multi-plant thermodynamic simulator<br/>│   └── requirements.txt             # Python dependencies (supabase, httpx)<br/>│<br/>├── .gitignore                       # Excludes node_modules, venv, and build artifacts<br/>└── README.md                        # Project documentation</code></pre>
+<pre>
+grid_telemetry/
+├── frontend/                        # React 18 Single Page Application
+│   ├── public/                      # Static assets
+│   ├── src/
+│   │   ├── App.jsx                  # Main router, SCADA views, AI engine &amp; CSV exporter
+│   │   ├── supabaseClient.js        # Supabase client &amp; WebSocket configuration
+│   │   ├── index.css                # Tailwind CSS directives &amp; dark theme
+│   │   └── main.jsx                 # React DOM entry point
+│   ├── package.json                 # Frontend dependencies &amp; scripts
+│   └── vite.config.js               # Vite bundler configuration
+│
+├── simulator/                       # Python Physics Telemetry Engine
+│   ├── generator.py                 # 5-second multi-plant thermodynamic simulator
+│   └── requirements.txt             # Python dependencies (supabase, httpx)
+│
+├── .gitignore                       # Excludes node_modules, venv, and build artifacts
+└── README.md                        # Project documentation
+</pre>
 
 <hr/>
 
@@ -225,12 +296,20 @@
 
 <h3>2. Frontend Setup</h3>
 <p>Navigate to the <code>frontend</code> folder, install dependencies, and start the Vite development server:</p>
-<pre><code>cd frontend<br/>npm install<br/>npm run dev</code></pre>
+<pre>
+cd frontend
+npm install
+npm run dev
+</pre>
 <p>The web application will launch at <code>http://localhost:5173/</code>.</p>
 
 <h3>3. Telemetry Simulator Execution</h3>
 <p>Open a separate terminal window, install the Python requirements, and launch the telemetry generator:</p>
-<pre><code>cd simulator<br/>pip install -r requirements.txt<br/>python generator.py</code></pre>
+<pre>
+cd simulator
+pip install -r requirements.txt
+python generator.py
+</pre>
 <p>The simulator will push live snapshots every 5 seconds to Supabase, immediately streaming updates to the React dashboard over WebSockets.</p>
 
 <hr/>
